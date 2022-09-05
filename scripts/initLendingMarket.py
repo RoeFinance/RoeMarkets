@@ -72,7 +72,7 @@ walletProvider     = WalletBalanceProvider.deploy({"from": a[0]})
 aToken = AToken.deploy({"from": a[0]})
 varDebt = VariableDebtToken.deploy({"from": a[0]})
 stbDebt = StableDebtToken.deploy({"from": a[0]})
-interestStrategy = DefaultReserveInterestRateStrategy.deploy(lpAddProvider, 0.9e27, 0,0.10e27,3e27,0.1e27,3e27, {"from": a[0]})
+interestStrategy = DefaultReserveInterestRateStrategy.deploy(lpAddProvider, 0.8e27, 0,0.10e27,3e27,0.1e27,3e27, {"from": a[0]})
 
 
 lpAddProvider.setPoolAdmin(a[0], {"from": a[0]})

@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: agpl-3.0
 /**
  * @title Version Changelog
- * Version 0x7
- * Removed ability to remove collateral use without checks
- * @author EZOIA
+ * Version 0xd
+ * Fix deposit to only prevent PM deposits to itself skip enabling of asset supply
+ * @author RoeLabs
  **/
 pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
@@ -55,9 +55,9 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
   using PercentageMath for uint256;
   using SafeERC20 for IERC20;
 
-  uint256 public constant LENDINGPOOL_REVISION = 0x7;
+  uint256 public constant LENDINGPOOL_REVISION = 0xd;
 
-  // EZOIA: Added address map for Position Manager
+  // RoeLabs: Added address map for Position Manager
   mapping(address => bool) public pm;
 
   modifier whenNotPaused() {
@@ -129,7 +129,7 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
 
     bool isFirstDeposit = IAToken(aToken).mint(onBehalfOf, amount, reserve.liquidityIndex);
 
-    if (isFirstDeposit) {
+    if ((isFirstDeposit) && (!pm[onBehalfOf])) {
       _usersConfig[onBehalfOf].setUsingAsCollateral(reserve.id, true);
       emit ReserveUsedAsCollateralEnabled(asset, onBehalfOf);
     }
@@ -191,6 +191,8 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
 
     return amountToWithdraw;
   }
+
+  
 
   /**
    * @dev Allows users to borrow a specific `amount` of the reserve underlying asset, provided that the borrower
@@ -421,7 +423,7 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
   }
 
 
-  // EZOIA: New function, from rev 0x4
+  // RoeLabs: New function, from rev 0x4
   /**
    * @dev Function to provide compatibility with rev 0x4
    * Function to assign a contract address as a Roe Market Position Manager
@@ -434,7 +436,7 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
   }
 
 
-  // EZOIA: New function, from rev 0x5
+  // RoeLabs: New function, from rev 0x5
   /**
    * @dev Function to assign/de-assign a contract address as a Roe Market Position Manager
    * Position Manager has the ability to unilaterally take any users' aToken without approval
@@ -451,8 +453,9 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
   }
 
 
-  // EZOIA: New function, from rev 0x4. 
-  // EZOIA: Additional transfer restrictions from rev 0x5
+  // RoeLabs: New function, from rev 0x4. 
+  // RoeLabs: Additional transfer restrictions from rev 0x5
+  // RoeLabs: Only check health data if not called by user: rev 0xb
   /**
    * @dev Function to transfer an aToken to an approved Position Manager contract
    * Position Manager needs to have proper checks to ensure that this is only called to do a soft liquidation
@@ -460,28 +463,29 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
    *  1) User has debt and debt is near liquidation (e.g. user health is <= 1.02)
    *  2) User has no debt, but tx.origin is user
    * A soft liquidation is a non-adversarial, in-built system to reset a user near liquidation back to LTV
-   * @param collateralAsset The address of the underlying asset to be transferred
+   * @param aAsset The address of the underlying aAsset to be transferred
    * @param user The address of the user supplying the aAsset
    * @param amount Amount of aToken to transfer from the user to the PM
    **/
   function PMTransfer(
-    address collateralAsset,
+    address aAsset,
     address user,
     uint256 amount
   ) external whenNotPaused {
     require(pm[msg.sender], "Not PM");
-    (,,,, uint256 healthFactor) = GenericLogic.calculateUserAccountData(
-      user,
-      _reserves,
-      _usersConfig[user],
-      _reservesList,
-      _reservesCount,
-      _addressesProvider.getPriceOracle()
-    );
-    if (healthFactor > 1.02e18) require(tx.origin == user, "Not initiated by user");
-    IAToken(collateralAsset).transferOnLiquidation(user, msg.sender, amount);
+    if (tx.origin != user) {
+      (,,,, uint256 healthFactor) = GenericLogic.calculateUserAccountData(
+        user,
+        _reserves,
+        _usersConfig[user],
+        _reservesList,
+        _reservesCount,
+        _addressesProvider.getPriceOracle()
+        );
+      require(healthFactor > 1.02e18, "Not initiated by user");
+    }
+    IAToken(aAsset).transferOnLiquidation(user, msg.sender, amount);
   }
-  
 
   /**
    * @dev Function to liquidate a non-healthy position collateral-wise, with Health Factor below 1
