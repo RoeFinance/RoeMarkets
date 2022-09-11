@@ -26,7 +26,7 @@ The added code has checks that protect users assets, as long as a user does not:
 1) Initiate a call to any PositionManager, and only interact through the Lending Pool Proxy (listed below in Deployment)
 2) Reduce their health factor to near liquidation (< 1.02) by borrowing,
 
-Roe Markets borrowers will always need to be sufficiently overcollateralised to keep their positions. However there is a possibility that in averse market conditions, the lending protocol may take on bad debt when the value of the borrowers' assets do not sufficiently cover the debt. This may lead to a haircut to all depositors.
+Roe Markets borrowers will always need to be sufficiently overcollateralised to keep their positions. However there is a possibility that in adverse market conditions, the lending protocol may take on bad debt when the value of the borrowers' assets do not sufficiently cover the debt. This may lead to a haircut to all depositors.
 
 ## For borrowers
 The code base of PositionManagers will be separately audited, to ensure that the code flow doesn't compromise the borrowers' funds unexpectedly.
