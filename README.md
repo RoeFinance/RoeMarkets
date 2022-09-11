@@ -28,8 +28,13 @@ The added code has checks that protect users assets, as long as a user does not:
 
 Roe Markets borrowers will always need to be sufficiently overcollateralised to keep their positions. However there is a possibility that in adverse market conditions, the lending protocol may take on bad debt when the value of the borrowers' assets do not sufficiently cover the debt. This may lead to a haircut to all depositors.
 
-## For borrowers
+## For borrowers ...
+
+### Using PositionManagers
 The code base of PositionManagers will be separately audited, to ensure that the code flow doesn't compromise the borrowers' funds unexpectedly.
+
+### Using LendingPool native borrowing
+Please ensure that your health factor remains above 1.02, if you do not trust the PositionManager's ability to gracefully reduce your leverage. Health factor below 1 will also be subject to the standard Aave liquidation process.
 
 ## For all users
 As the logic of the Lending Market can be upgraded, it is imperative that users verify every update to the logic, as what was previously safe could be updated to include code that may be unsafe for the users' assets.
@@ -47,6 +52,16 @@ Users may read more details here (https://www.certik.com/resources/blog/Timelock
 |WETH/USDC|0xD14a7c302051A0F1e9cE8e9a8C4845a45F41B46f
 |WBTC/USDC|0x5F360c6b7B25DfBfA4F10039ea0F7ecfB9B02E60
 |FXS/FRAX|0x01b69EB0393006E56a372B23524F7AD5Db7f2166|
+
+### Lending Pool Addresses Provider
+Each asset LP and asset type has its own isolated market. 
+EmergencyAdmin and PoolAdmin can also be read and confirmed from these addresses on Etherscan.
+
+|Markets | Lending Pool Addresses Provider |
+|--|--|
+|WETH/USDC|0x01b76559D512Fa28aCc03630E8954405BcBB1E02
+|WBTC/USDC|0xe7f6F6Cd1Be8313a05e0E38bA97B2A5Dfed7616d
+|FXS/FRAX|0x1286A774322bB1153750f8a4Eb19Bab3a1343F69|
 
 ### Lending Market Base Code from Aave Deployment 001, and should match completely
 
