@@ -39,9 +39,11 @@ Please ensure that your health factor remains above 1.02, if you do not trust th
 ## For all users
 As the logic of the Lending Market can be upgraded, it is imperative that users verify every update to the logic, as what was previously safe could be updated to include code that may be unsafe for the users' assets.
 
-To allow users time to react, the PoolAdmin is gated behind a timelock (https://etherscan.io/address/0xA10feBCE203086d7A0f6E9A2FA46268Bec7E199F), which is verified and requires a minimum delay of 2 days. 
+To allow users time to react, any changes to the protocol must go a timelock (e.g. for Mainnet it is https://etherscan.io/address/0xA10feBCE203086d7A0f6E9A2FA46268Bec7E199F) of 2 days. This is ensured by setting the PoolAdmin address to the timelock; all change to the lending pool must thus be first queued for 2 days. The code will be published on each Blockscan network it is deployed on. 
 
 Users may read more details here (https://www.certik.com/resources/blog/Timelock) about timelocks, and also how to monitor changes to timelocks so that any unexpected changes can raise alerts to react upon.
+
+Major code safety issues raised may necessitate a protocol pause by the emergencyAdmin - this disables new borrows and deposits, but doesn't stop withdrawals and repayment. This pause will go on until the bug can be patched through the timelock delay of 2 days.
 
 # Deployment 
 ## Mainnet
