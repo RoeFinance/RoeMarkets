@@ -88,7 +88,7 @@ EmergencyAdmin and PoolAdmin can also be read and confirmed from these addresses
 
 | Code | Address | Diff with base code|
 | -- | -- | -- |
-| LendingPool | 0x59A51F4f3ECe3D24A5EaE424ebcFB7551af411b4 | https://www.diffchecker.com/WadsbSwH
+| LendingPool | 0xfc09959777b982458f1366cb65ba717c6b781d2c | https://www.diffchecker.com/WadsbSwH
 
 
 ### Key Addresses  to monitor
@@ -98,4 +98,4 @@ EmergencyAdmin and PoolAdmin can also be read and confirmed from these addresses
 
 
 # Code Verification
-All contracts are verified on Blockscan where possible; the team is working to ensure all files are verified, but currently the following files are unverifiable: GenericLogic, ReserveLogic, LendingPool, InitializableImmutableAdminUpgradeabilityProxy
+All contracts are verified on Blockscan, for ease of comparison.
