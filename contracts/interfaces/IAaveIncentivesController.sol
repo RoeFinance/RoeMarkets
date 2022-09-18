@@ -19,7 +19,7 @@ interface IAaveIncentivesController {
   /*
    * @dev Returns the configuration of the distribution for a certain asset
    * @param asset The address of the reference asset of the distribution
-   * @return The asset index, the emission per second and the last updated timestamp
+   * @return The emission per second, the last updated timestamp, and the asset index
    **/
   function getAssetData(address asset)
     external
@@ -34,7 +34,7 @@ interface IAaveIncentivesController {
    * LEGACY **************************
    * @dev Returns the configuration of the distribution for a certain asset
    * @param asset The address of the reference asset of the distribution
-   * @return The asset index, the emission per second and the last updated timestamp
+   * @return The emission per second, the last updated timestamp, and the asset index
    **/
   function assets(address asset)
     external

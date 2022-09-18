@@ -55,7 +55,7 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
   using PercentageMath for uint256;
   using SafeERC20 for IERC20;
 
-  uint256 public constant LENDINGPOOL_REVISION = 0xe;
+  uint256 public constant LENDINGPOOL_REVISION = 0x11;
 
   // RoeLabs: Added address map for Position Manager
   mapping(address => bool) public pm;
@@ -400,7 +400,7 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
     override
     whenNotPaused
   {
-    require(pm[msg.sender], "PM_CANNOT_BORROW"); // RoeMarkets: PMs can never take on loans
+    require(pm[msg.sender] == false, "PM_CANNOT_BORROW"); // RoeMarkets: PMs can never take on loans
 
     DataTypes.ReserveData storage reserve = _reserves[asset];
 
@@ -466,9 +466,10 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
   /**
    * @dev Function to transfer an aToken to an approved Position Manager contract
    * Position Manager needs to have proper checks to ensure that this is only called to do a soft liquidation
+   * Position Manager is also used to assist user to unwind their position
    * This function can only be called if:
-   *  1) User has debt and debt is near liquidation (e.g. user health is <= 1.02)
-   *  2) User has no debt, but tx.origin is user
+   *  1) User debt is near liquidation (e.g. user health is <= 1.02)
+   *  2) The user is initiating the transaction (tx.user == user)
    * A soft liquidation is a non-adversarial, in-built system to reset a user near liquidation back to LTV
    * @param aAsset The address of the underlying aAsset to be transferred
    * @param user The address of the user supplying the aAsset
