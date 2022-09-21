@@ -9,32 +9,13 @@ We will follow Aave V2 at a snapshot of their development ([https://github.com/a
 If any critical bugs are raised in the Aave Deployment, the protocol will strive to immediately pause and upgrade in accordance to the Aave V2 bugfix.
 
 # Main changes
-Only the LendingPool file itself has been changed; a quick visual diff of the original versus the Roe Markets' can be found here: https://www.diffchecker.com/WadsbSwH
-
-We can break down the main changes into the following: 
-1. Adding of the role of a PositionManager, which must be a contract: L61, L426-L493
-2. Making the PositionManager not enable collateral usage by default on transfer to save gas: L132
-3. Flashloan fees were reduced to 0: L98
+Based on the audit, a couple of comments were changed to match the actual usage, and the version number is incremented; a quick visual diff of the original versus the Roe Markets' can be found here: https://www.diffchecker.com/iYcxwegj
 
 # Code Safety Considerations
 ## For depositors
 Roe Markets primarily aim to help liquidity pool depositors earn extra supply yield with minimal additional technical risk. This is achieved by ensuring minimal changes to battle-tested code, and to ensure the new code added cannot be wielded to remove depositor's money.
 
-PositionManagers have the flexibility to transfer ATokens to themselves; this is needed to help the user manage their positions. 
-
-The added code has checks that protect users assets, as long as a user does not:
-1) Initiate a call to any PositionManager, and only interact through the Lending Pool Proxy (listed below in Deployment)
-2) Reduce their health factor to near liquidation (< 1.02) by borrowing,
-
 Roe Markets borrowers will always need to be sufficiently overcollateralised to keep their positions. However there is a possibility that in adverse market conditions, the lending protocol may take on bad debt when the value of the borrowers' assets do not sufficiently cover the debt. This may lead to a haircut to all depositors.
-
-## For borrowers ...
-
-### Using PositionManagers
-The code base of PositionManagers will be separately audited, to ensure that the code flow doesn't compromise the borrowers' funds unexpectedly.
-
-### Using LendingPool native borrowing
-Please ensure that your health factor remains above 1.02, if you do not trust the PositionManager's ability to gracefully reduce your leverage. Health factor below 1 will also be subject to the standard Aave liquidation process.
 
 ## For all users
 As the logic of the Lending Market can be upgraded, it is imperative that users verify every update to the logic, as what was previously safe could be updated to include code that may be unsafe for the users' assets.
@@ -88,13 +69,13 @@ EmergencyAdmin and PoolAdmin can also be read and confirmed from these addresses
 
 | Code | Address | Diff with base code|
 | -- | -- | -- |
-| LendingPool | 0xfc09959777b982458f1366cb65ba717c6b781d2c | https://www.diffchecker.com/WadsbSwH
+| LendingPool | 0xfc09959777b982458f1366cb65ba717c6b781d2c | https://www.diffchecker.com/iYcxwegj
 
 
 ### Key Addresses  to monitor
 | Contract Type | Address |
 | -- |--|
-| Timelock | 0xA10feBCE203086d7A0f6E9A2FA46268Bec7E199F |
+| Timelock | 0xFB11ABbAbd18a2D86FA99C0950d63C0462e16ee8 |
 
 
 # Code Verification
