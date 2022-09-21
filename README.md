@@ -8,6 +8,8 @@ We will follow Aave V2 at a snapshot of their development ([https://github.com/a
 
 If any critical bugs are raised in the Aave Deployment, the protocol will strive to immediately pause and upgrade in accordance to the Aave V2 bugfix.
 
+The current codebase and deployment was audited by Peckshield, and available in the reports folder.
+
 # Main changes
 Based on the audit, a couple of comments were changed to match the actual usage, and the version number is incremented; a quick visual diff of the original versus the Roe Markets' can be found here: https://www.diffchecker.com/iYcxwegj
 
