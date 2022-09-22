@@ -2,7 +2,9 @@
 /**
  * @title Version Changelog
  * Version 0x11
- * Added event emits for pm toggling 
+ * Add PMSet, PMAssign, pm for granting PositionManagers powers
+ * Added PMTransfer for contracts set to be PM the ability to move tokens with certain restrictions
+ * Added softLiq parameter as point to be considered for soft liquidation
  * @author RoeLabs
  **/
 pragma solidity 0.6.12;
@@ -59,6 +61,9 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
 
   // RoeLabs: Added address map for Position Manager
   mapping(address => bool) public pm;
+
+  // RoeLabs: Added softLiquidationThreshold health factor threshold for Position Managers
+  uint256 public softLiquidationThreshold = 1e18;
 
   modifier whenNotPaused() {
     _whenNotPaused();
@@ -468,7 +473,7 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
    * Position Manager needs to have proper checks to ensure that this is only called to do a soft liquidation
    * Position Manager is also used to assist user to unwind their position
    * This function can only be called if:
-   *  1) User debt is near liquidation (e.g. user health is <= 1.02)
+   *  1) User debt is near liquidation (e.g. user health is <= softLiquidationThreshold)
    *  2) The user is initiating the transaction (tx.user == user)
    * A soft liquidation is a non-adversarial, in-built system to reset a user near liquidation back to LTV
    * @param aAsset The address of the underlying aAsset to be transferred
@@ -490,9 +495,23 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
         _reservesCount,
         _addressesProvider.getPriceOracle()
         );
-      require(healthFactor <= 1.02e18, "Not initiated by user");
+      require(healthFactor <= softLiquidationThreshold, "Not initiated by user");
     }
     IAToken(aAsset).transferOnLiquidation(user, msg.sender, amount);
+  }
+
+  // RoeLabs: New function, from rev 0x11
+  /**
+   * @dev Set soft liquidation threshold for the Roe Protocol
+   * @param _threshold The health factor whereby soft-liquidations are enabled
+  **/
+  function setSoftLiquidationThreshold(
+    uint256 _threshold
+  ) external {
+    require(_addressesProvider.getPoolAdmin() == msg.sender, Errors.CALLER_NOT_POOL_ADMIN);
+    require(_threshold >= 1e18,    "Soft threshold lower than hard liquidation point");
+    require(_threshold <= 1.03e18, "Soft threshold higher than LTV threshold");
+    softLiquidationThreshold = _threshold;
   }
 
   /**
