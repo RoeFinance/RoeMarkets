@@ -35,7 +35,7 @@ TRIBE = ""
 TRIBE_ETH_LINK = "0x84a24deCA415Acc0c395872a9e6a63E27D6225c8" # NEED TO DEPLOY CHAINLINK MAPPER TO TRIBE_USD
 
 FEI = "" 
-    FEI_USD_LINK = 0x31e0a88fecB6eC0a411DBe0e9E76391498296EE9
+FEI_USD_LINK = 0x31e0a88fecB6eC0a411DBe0e9E76391498296EE9
 
 priceOracle.setAssetsSource([WBTC], [WBTC_USD_LINK], {"from": owner})
 
@@ -80,6 +80,18 @@ nativeGateway.authorizeLendingPool(proxyLendingPool, {"from": a[0]})
 
 # Setup assets in market
 
+# From Roe,
+lpo = LPOracle.deploy("0x6e7a5FAFcec6BB1e78bAE2A1F0B612012BF14827", "0xAB594600376Ec9fD91F8e885dADF0CE036862dE0", "0xfE4A8cc5b5B2366C1B58Bea3858e81843581b2F7", {"from": roeOwner, "priority_fee":30.1e9})
+
+NULL = "0x0000000000000000000000000000000000000000"
+WMATIC = "0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270"
+WMATIC_USDC_QS = "0x6e7a5FAFcec6BB1e78bAE2A1F0B612012BF14827"
+WMATIC_CL = "0xAB594600376Ec9fD91F8e885dADF0CE036862dE0"
+WMATIC_USDC_QS_CL = "0x7844589F92E342e2f7d8C828FE224F3CcEd23b21"
+
+ao = AaveOracle.at("0xbe4e7883a893189bE8AbE949c1DA4c70462982D3")
+priceOracle     = AaveOracle.deploy([WMATIC, WMATIC_USDC_QS], [WMATIC_CL, WMATIC_USDC_QS_CL], NULL, NULL, 1e8, {"from": a[0]})
+
 ## Deploy additional Aave Markets with same Addresses Provider Registry (example)
 marketMapper = {2: "WBTC-USDC", 3: "FXS-FRAX", 4: "TRIBE-FEI"}
 for i in range(2, 5):
@@ -94,5 +106,8 @@ for i in range(2, 5):
     dataProvider = AaveProtocolDataProvider.deploy(lpAddProvider, {"from": a[0]})
 
 
+
 def main():
   return
+
+
