@@ -2,7 +2,7 @@
 /**
  * @title Version Changelog
  * Version 0x14
- * Removed ability for nonPM to use flash loans
+ * Added SoftLiquidationThresholdSet Event
  * @author RoeLabs
  **/
 pragma solidity 0.6.12;
@@ -497,6 +497,9 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
     IAToken(aAsset).transferOnLiquidation(user, msg.sender, amount);
   }
 
+  // RoeLabs: New event, from rev 0x14
+  event SoftLiquidationThresholdSet(uint256 _threshold);
+
   // RoeLabs: New function, from rev 0x11
   /**
    * @dev Set soft liquidation threshold for the Roe Protocol
@@ -509,6 +512,7 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
     require(_threshold >= 1e18,    "Soft threshold lower than hard liquidation point");
     require(_threshold <= 1.03e18, "Soft threshold higher than LTV threshold");
     softLiquidationThreshold = _threshold;
+    emit SoftLiquidationThresholdSet(_threshold);
   }
 
   /**
