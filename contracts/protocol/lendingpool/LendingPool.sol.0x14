@@ -3,6 +3,7 @@
  * @title Version Changelog
  * Version 0x14
  * Added SoftLiquidationThresholdSet Event
+ * Added check to prevent deposits from recursive looping
  * @author RoeLabs
  **/
 pragma solidity 0.6.12;
@@ -136,6 +137,9 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
       _usersConfig[onBehalfOf].setUsingAsCollateral(reserve.id, true);
       emit ReserveUsedAsCollateralEnabled(asset, onBehalfOf);
     }
+
+    // RoeLabs: Rev 0x14 Added check to prevent asset looping beyond supply
+    require( IERC20(aToken).totalSupply() <= IERC20(asset).totalSupply(), "Excessive looping");
 
     emit Deposit(asset, msg.sender, onBehalfOf, amount, referralCode);
   }
