@@ -92,9 +92,19 @@ WMATIC_USDC_QS_CL = "0x7844589F92E342e2f7d8C828FE224F3CcEd23b21"
 ao = AaveOracle.at("0xbe4e7883a893189bE8AbE949c1DA4c70462982D3")
 priceOracle     = AaveOracle.deploy([WMATIC, WMATIC_USDC_QS], [WMATIC_CL, WMATIC_USDC_QS_CL], NULL, NULL, 1e8, {"from": a[0]})
 
+# Mainnet settings
+
+lpRegistry = LendingPoolAddressesProviderRegistry.at("0x0029B254d039d8C5C88512a44EAa6FF999296009")
+lendingPool = "0x341282461C1f097724Be889F969905Aae8C4D591"
+collatManager = "0xcb57103e8a568BDA8826846Ab8B280C754441304"
+configurator = "0x751aAdF96CA9427514dd816A227881E5B6cE87ce"
+lendingOracle = "0x090E950666D3F2c5cf7fc98135D94287c83E0a85"
+priceOracle = "0x8A4236F5eF6158546C34Bd7BC2908B8106Ab1Ea1"
+
 ## Deploy additional Aave Markets with same Addresses Provider Registry (example)
 marketMapper = {2: "WBTC-USDC", 3: "FXS-FRAX", 4: "TRIBE-FEI"}
 for i in range(2, 5):
+if True:
     print("Deploying market: " + marketMapper[i])
     lpAddProvider   = LendingPoolAddressesProvider.deploy("Roe Market " + marketMapper[i], {"from": a[0]})
     lpRegistry.registerAddressesProvider(lpAddProvider, i, {"from": a[0]})

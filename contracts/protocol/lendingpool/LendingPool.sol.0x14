@@ -3,7 +3,8 @@
  * @title Version Changelog
  * Version 0x14
  * Added SoftLiquidationThresholdSet Event
- * Added check to prevent deposits from recursive looping
+ * Added supply and borrow caps, settable by PoolAdmin
+ * Reset flashloan fee to 9bps, PM contracts can bypass
  * @author RoeLabs
  **/
 pragma solidity 0.6.12;
@@ -64,6 +65,10 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
   // RoeLabs: Added softLiquidationThreshold health factor threshold for Position Managers
   uint256 public softLiquidationThreshold = 1e18;
 
+  // RoeLabs: Added borrowCap and supplyCap adjustable by poolAdmin
+  mapping(address => uint256) public supplyCap;
+  mapping(address => uint256) public borrowCap;
+
   modifier whenNotPaused() {
     _whenNotPaused();
     _;
@@ -99,7 +104,7 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
   function initialize(ILendingPoolAddressesProvider provider) public initializer {
     _addressesProvider = provider;
     _maxStableRateBorrowSizePercent = 2500;
-    _flashLoanPremiumTotal = 0;
+    _flashLoanPremiumTotal = 9;
     _maxNumberOfReserves = 128;
   }
 
@@ -138,8 +143,8 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
       emit ReserveUsedAsCollateralEnabled(asset, onBehalfOf);
     }
 
-    // RoeLabs: Rev 0x14 Added check to prevent asset looping beyond supply
-    require( IERC20(aToken).totalSupply() <= IERC20(asset).totalSupply(), "Excessive looping");
+    // RoeLabs: Rev 0x14 Added check to limit supply to admin-capped amount
+    require( IERC20(aToken).totalSupply() <= supplyCap[asset], "Exceeded Supply Cap" ); 
 
     emit Deposit(asset, msg.sender, onBehalfOf, amount, referralCode);
   }
@@ -519,6 +524,29 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
     emit SoftLiquidationThresholdSet(_threshold);
   }
 
+  // RoeLabs: New function, from rev 0x14
+  event BorrowCapUpdated(address _asset, uint256 _cap);
+  event SupplyCapUpdated(address _asset, uint256 _cap);
+
+  // RoeLabs: New function, from rev 0x14
+  /**
+   * @dev Set supply cap for an asset for the Roe Protocol
+   * @param _asset Address of asset
+   * @param _supplyCap Amount to limit supply to
+   * @param _borrowCap Amount to limit borrow to
+  **/
+  function setCap(
+    address _asset,
+    uint256 _supplyCap,
+    uint256 _borrowCap
+  ) external {
+    require(_addressesProvider.getPoolAdmin() == msg.sender, Errors.CALLER_NOT_POOL_ADMIN);
+    supplyCap[_asset] = _supplyCap;
+    borrowCap[_asset] = _borrowCap;
+    emit SupplyCapUpdated(_asset, _supplyCap);
+    emit BorrowCapUpdated(_asset, _borrowCap);
+  }
+
   /**
    * @dev Function to liquidate a non-healthy position collateral-wise, with Health Factor below 1
    * - The caller (liquidator) covers `debtToCover` amount of debt of the user getting liquidated, and receives
@@ -598,9 +626,6 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
     uint16 referralCode
   ) external override whenNotPaused {
 
-    // Roe 0x14: Removed ability for non PM to call flashLoan
-    require(pm[msg.sender], "Not PM");
-
     FlashLoanLocalVars memory vars;
 
     ValidationLogic.validateFlashloan(assets, amounts);
@@ -613,7 +638,10 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
     for (vars.i = 0; vars.i < assets.length; vars.i++) {
       aTokenAddresses[vars.i] = _reserves[assets[vars.i]].aTokenAddress;
 
-      premiums[vars.i] = amounts[vars.i].mul(_flashLoanPremiumTotal).div(10000);
+      // RoeLabs: Enable flash loan premiums only for non-PMs
+      if (pm[msg.sender] == false) {
+        premiums[vars.i] = amounts[vars.i].mul(_flashLoanPremiumTotal).div(10000);
+      }
 
       IAToken(aTokenAddresses[vars.i]).transferUnderlyingTo(receiverAddress, amounts[vars.i]);
     }
@@ -1027,6 +1055,9 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
     if (vars.releaseUnderlying) {
       IAToken(vars.aTokenAddress).transferUnderlyingTo(vars.user, vars.amount);
     }
+
+    // RoeLabs: Rev 0x14 Added check to limit borrows to admin-capped amount
+    require( IERC20(reserve.variableDebtTokenAddress).totalSupply() <= borrowCap[vars.asset], "EBC" ); 
 
     emit Borrow(
       vars.asset,
